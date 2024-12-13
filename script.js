@@ -12,6 +12,44 @@ document.addEventListener("DOMContentLoaded", function () {
   ];
   //head, body..., tail
 
+  let dx = cellSize; //direction of movement
+  let dy = 0;
+
+  function updateSnake() {
+    const newHead = { x: snake[0].x + dx, y: snake[0].y + dy };
+    snake.unshift(newHead);
+    //check collision occurs
+    if (newHead.x === food.x && newHead.y === food.y) {
+      score += 10;
+      document.getElementById("score-board").textContent = `Score: ${score}`;
+      // TODO: move food
+    } else {
+      snake.pop(); //remove the tail
+    }
+  }
+
+  function changeDirection(e) {
+    const isGoingDown = dy === cellSize;
+    const isGoingUp = dy === -cellSize;
+    const isGoingRight = dx === cellSize;
+    const isGoingLeft = dx === -cellSize;
+
+    if (e.key === "ArrowUp" && !isGoingDown) {
+      // if going down & suddenly press up, it should not go up
+      dx = 0;
+      dy = -cellSize;
+    } else if (e.key === "ArrowDown" && !isGoingUp) {
+      dx = 0;
+      dy = cellSize;
+    } else if (e.key === "ArrowLeft" && !isGoingRight) {
+      dx = -cellSize;
+      dy = 0;
+    } else if (e.key === "ArrowRight" && !isGoingLeft) {
+      dx = cellSize;
+      dy = 0;
+    }
+  }
+
   function drawDiv(x, y, className) {
     // x and y are the top-left pixels of the cell
     const divElement = document.createElement("div");
@@ -19,6 +57,13 @@ document.addEventListener("DOMContentLoaded", function () {
     divElement.style.top = `${y}px`;
     divElement.style.left = `${x}px`;
     return divElement;
+  }
+
+  function gameLoop() {
+    setInterval(() => {
+      updateSnake();
+      drawFoodAndSnake();
+    }, 200);
   }
 
   function drawFoodAndSnake() {
@@ -30,11 +75,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const foodElement = drawDiv(food.x, food.y, "food");
     gameArena.appendChild(foodElement);
   }
+
   function runGame() {
     if (!gameStarted) {
       gameStarted = true;
-      //gameLoop() //TODO
-      drawFoodAndSnake();
+      document.addEventListener("keydown", changeDirection);
+      gameLoop();
     }
   }
 
