@@ -15,6 +15,33 @@ document.addEventListener("DOMContentLoaded", function () {
   let dx = cellSize; //direction of movement
   let dy = 0;
 
+  let intervalId;
+  let gameSpeed = 200;
+
+  function isGameOver() {
+    //snake body collision checks
+    for (let i = 1; i < snake.length; i++) {
+      if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) {
+        return true;
+      }
+    }
+    //wall collision checks
+    const hitLeftWall = snake[0].x < 0;
+    const hitRightWall = snake[0].x > arenaSize - cellSize;
+    const hitTopWall = snake[0].y < 0;
+    const hitBottomWall = snake[0].y > arenaSize - cellSize;
+    return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall;
+  }
+
+  function moveFood() {
+    let newX, newY;
+    do {
+      newX = Math.floor(Math.random() * 30) * cellSize;
+      newY = Math.floor(Math.random() * 30) * cellSize;
+    } while (snake.some((snakeCell) => snakeCell.x === newX && snakeCell.y === newY));
+    food = { x: newX, y: newY };
+  }
+
   function updateSnake() {
     const newHead = { x: snake[0].x + dx, y: snake[0].y + dy };
     snake.unshift(newHead);
@@ -22,7 +49,12 @@ document.addEventListener("DOMContentLoaded", function () {
     if (newHead.x === food.x && newHead.y === food.y) {
       score += 10;
       document.getElementById("score-board").textContent = `Score: ${score}`;
-      // TODO: move food
+      moveFood();
+      if (gameSpeed > 50) {
+        clearInterval(intervalId);
+        gameSpeed -= 10;
+        gameLoop();
+      }
     } else {
       snake.pop(); //remove the tail
     }
@@ -60,10 +92,16 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function gameLoop() {
-    setInterval(() => {
+    intervalId = setInterval(() => {
+      if (isGameOver()) {
+        clearInterval(intervalId);
+        gameStarted = false;
+        alert("Game Over! Your score is " + score);
+        return;
+      }
       updateSnake();
       drawFoodAndSnake();
-    }, 200);
+    }, gameSpeed);
   }
 
   function drawFoodAndSnake() {
